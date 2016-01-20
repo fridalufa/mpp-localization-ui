@@ -1,0 +1,44 @@
+html, body {
+	margin: 0;
+	padding: 0;
+	background: #ecf0f1;
+	font-family: 'Droid Sans', sans-serif;
+}
+
+canvas {
+	border: 1px solid #777;
+	background: #fff;
+}
+.distances {
+    display: flex;
+    margin: 0;
+	justify-content: center;
+}
+
+.distances li {
+    list-style-type: none;
+    min-width: 100px;
+    padding: 10px;
+}
+
+.top-bar {
+	background: #34495e;
+	border-bottom: 1px solid darken(#34495e, 10%);
+	padding: 10px;
+	color: #fff;
+	text-align: center;
+}
+
+.app-content {
+	display: flex;
+}
+
+.canvas-col {
+	max-width: 800px;
+	padding-top: 10px;
+}
+
+.sidebar {
+	padding: 10px;
+	flex-grow: 2;
+}

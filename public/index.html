@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Tracking</title>
+	<script src="http://cdnjs.cloudflare.com/ajax/libs/vue/1.0.14/vue.min.js"></script>
+	<script src="js/mqttws31.js"></script>
+    <link href='https://fonts.googleapis.com/css?family=Droid+Sans' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+	<div id="app">
+        <div class="top-bar">
+            <div class="updated">
+                Indoor Localization
+            </div>
+        </div>
+        <div class="app-content">
+            <div class="canvas-col">
+                <canvas v-bind:width="baseFrame.width" v-bind:height="baseFrame.height"></canvas>
+            </div>
+            <div class="sidebar">
+                <panel title="Current Estimated Position" header-color="orange">
+                        <ul class="distances">
+                            <li>x: {{ position.x | float }}</li>
+                            <li>y: {{ position.y | float }}</li>
+                        </ul>
+                </panel>
+                <panel title="Last Measured Distances" header-color="green">
+                    <ul class="distances">
+                      <li v-for="(node, dist) in distances">
+                        {{ node }}: {{ dist }}
+                      </li>
+                    </ul>
+                </panel>
+            </div>
+        </div>
+	</div>
+    <script src="js/app.js"></script>
+</body>
+</html>

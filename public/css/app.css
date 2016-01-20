@@ -1,0 +1,47 @@
+html, body {
+  margin: 0;
+  padding: 0;
+  background: #ecf0f1;
+  font-family: 'Droid Sans', sans-serif; }
+
+canvas {
+  border: 1px solid #777;
+  background: #fff; }
+
+.distances {
+  display: -webkit-flex;
+  display: -ms-flexbox;
+  display: flex;
+  margin: 0;
+  -webkit-justify-content: center;
+  -ms-flex-pack: center;
+  justify-content: center; }
+
+.distances li {
+  list-style-type: none;
+  min-width: 100px;
+  padding: 10px; }
+
+.top-bar {
+  background: #34495e;
+  border-bottom: 1px solid #22303d;
+  padding: 10px;
+  color: #fff;
+  text-align: center; }
+
+.app-content {
+  display: -webkit-flex;
+  display: -ms-flexbox;
+  display: flex; }
+
+.canvas-col {
+  max-width: 800px;
+  padding-top: 10px; }
+
+.sidebar {
+  padding: 10px;
+  -webkit-flex-grow: 2;
+  -ms-flex-positive: 2;
+  flex-grow: 2; }
+
+/*# sourceMappingURL=app.css.map */
