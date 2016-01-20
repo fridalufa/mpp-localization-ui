@@ -4,6 +4,16 @@ import random
 
 import paho.mqtt.client as mqtt
 
+try:
+	from gui_config import HostConfig
+	HOST = HostConfig["host"]
+	USERNAME = HostConfig["username"]
+	PASSWORD = HostConfig["password"]
+except ImportError:
+	HOST = "localhost"
+	USERNAME = None
+	PASSWORD = None
+
 class App(object):
 	"""Test-GUI to fake distance measurings of a WSN"""
 	def __init__(self):
@@ -14,11 +24,14 @@ class App(object):
 		self.curPos = None
 		self.errorRate = 0.2
 		self.client = mqtt.Client()
+		print "Using host %s" %HOST
+		if not USERNAME == None:
+			self.client.username_pw_set(USERNAME, password=PASSWORD)
 
 	def run(self):
 		self.client.on_connect = self.on_connect
 		self.client.on_message = self.on_message
-		self.client.connect("localhost", 1883, 60)
+		self.client.connect(HOST, 1883, 60)
 		self.client.loop_start()
 		self.ui()
 		self.root.mainloop()

@@ -45,8 +45,16 @@ var app = new Vue({
     },
 
     ready: function ready() {
+        var host = "localhost";
+        var port = Number(9001);
         // Create a client instance
-        this.client = new Paho.MQTT.Client('localhost', Number(9001), "clientId-" + Math.random());
+        if (window.mqtt_config) {
+            host = window.mqtt_config.host;
+            if (window.mqtt_config.port) {
+                port = Number(window.mqtt_config.port);
+            }
+        }
+        this.client = new Paho.MQTT.Client(host, port, "clientId-" + Math.random());
         // set callback handlers
         this.client.onConnectionLost = this.onConnectionLost;
         this.client.onMessageArrived = this.onMessageArrived;
@@ -55,9 +63,17 @@ var app = new Vue({
 
     methods: {
         connect: function connect() {
-            this.client.connect({
-                onSuccess: this.onConnect
-            });
+            if (window.mqtt_config && window.mqtt_config.username) {
+                this.client.connect({
+                    onSuccess: this.onConnect,
+                    userName: window.mqtt_config.username,
+                    password: window.mqtt_config.password
+                });
+            } else {
+                this.client.connect({
+                    onSuccess: this.onConnect
+                });
+            }
         },
 
         onConnectionLost: function onConnectionLost(responseObject) {
