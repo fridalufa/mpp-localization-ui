@@ -11,6 +11,7 @@ var app = new Vue({
 	el: '#app',
     components: {Panel},
 	data: {
+        connected: false,
 		distances: {
 			d1: 0,
 			d2: 0,

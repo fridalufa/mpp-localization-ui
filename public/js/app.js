@@ -23,6 +23,7 @@ var app = new Vue({
     el: '#app',
     components: { Panel: _Panel2.default },
     data: {
+        connected: false,
         distances: {
             d1: 0,
             d2: 0,

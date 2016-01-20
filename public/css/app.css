@@ -27,7 +27,34 @@ canvas {
   border-bottom: 1px solid #22303d;
   padding: 10px;
   color: #fff;
+  display: -webkit-flex;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-justify-content: center;
+  -ms-flex-pack: center;
+  justify-content: center;
+  width: 100%; }
+
+.title {
+  width: 90%;
   text-align: center; }
+
+.connected {
+  -webkit-align-self: flex-end;
+  -ms-flex-item-align: end;
+  align-self: flex-end; }
+
+.not-connected, .is-connected {
+  display: block;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%; }
+
+.not-connected {
+  background: #e74c3c; }
+
+.is-connected {
+  background: #27ae60; }
 
 .app-content {
   display: -webkit-flex;

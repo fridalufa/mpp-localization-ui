@@ -11,8 +11,13 @@
 <body>
 	<div id="app">
         <div class="top-bar">
-            <div class="updated">
+            
+            <div class="title">
                 Indoor Localization
+            </div>
+            <div class="connected">
+                <span title="Connection to broker established" v-if="connected" class="is-connected">&nbsp;</span>
+                <span title="No Connection to broker" v-else class="not-connected">&nbsp;</span>
             </div>
         </div>
         <div class="app-content">

@@ -26,7 +26,33 @@ canvas {
 	border-bottom: 1px solid darken(#34495e, 10%);
 	padding: 10px;
 	color: #fff;
+	display: flex;
+	justify-content: center;
+	width: 100%;
+}
+
+.title {
+	width: 90%;
 	text-align: center;
+}
+
+.connected {
+	align-self: flex-end;
+}
+
+.not-connected, .is-connected {
+	display: block;
+	width: 20px;
+	height: 20px;
+	border-radius: 50%;
+}
+
+.not-connected {
+	background: #e74c3c;
+}
+
+.is-connected {
+	background: #27ae60;
 }
 
 .app-content {
