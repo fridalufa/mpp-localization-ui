@@ -22,21 +22,19 @@ var app = new Vue({
             d2: 0,
             d3: 0
         },
+        width: 8,
+        height: 6,
 		baseNodes: {
-			d1: [10,14],
-			d2: [790, 14],
-			d3: [400, 590]
-		},
-		baseFrame: {
-			width: 800,
-			height: 600
+			d1: [0.1,0.14],
+			d2: [7.9, 0.14],
+			d3: [4, 5.9]
 		},
         position: {
             x: 0,
-            y: 0
+            y: 0,
+            error: 0
         },
-        receiveCount: 0,
-		dbg_receiveCount: 0
+        receiveCount: 0
 	},
 
 	ready: function() {
@@ -84,15 +82,16 @@ var app = new Vue({
             this.connected = true;
 
             this.client.subscribe("position/#");
-            this.client.subscribe("position_debug/#");
 
-            this.renderer = new CanvasRenderer(this.$el.querySelector('canvas'), this.baseNodes, this.distances);
+            this.renderer = new CanvasRenderer(this.$el.querySelector('canvas'), this.baseNodes, this.distances, this.width, this.height);
         },
 
         onMessageArrived: function(message) {
             if (message.destinationName.indexOf("position/") == 0) {
             	var index = message.destinationName.substring(9);
-            	this.distances[index] = parseFloat(message.payloadString);
+            	this.distances[index] = (parseFloat(message.payloadString) / 100.0); // scale...
+
+                console.log(parseFloat(message.payloadString) / 100.0);
             	if (this.receiveCount == 2) {
             		this.calculatePosition();
             		this.receiveCount = 0;
@@ -100,35 +99,17 @@ var app = new Vue({
             		this.receiveCount++;
             	}
             }
-
-            if (message.destinationName.indexOf("position_debug/") == 0) {
-                var index = message.destinationName.substring(15);
-                this.dbg_distances[index] = parseFloat(message.payloadString);
-                if (this.dbg_receiveCount == 2) {
-                    this.calculateDebugPosition();
-                    this.dbg_receiveCount = 0;
-                } else {
-                    this.dbg_receiveCount++;
-                }
-            }
         },
 
         calculatePosition: function() {
             this.renderer.updateDistances(this.distances);
+
             var pcalc = new PositionCalculator();
             var result = pcalc.calculatePosition(this.distances, this.baseNodes);
             this.renderer.setPosition(result);
             this.position.x = result[0];
             this.position.y = result[1];
-        },
-
-        calculateDebugPosition: function() {
-            //this.renderer.updateDistances(this.dbg_distances);
-            var pcalc = new PositionCalculator();
-            var result = pcalc.calculatePosition(this.distances, this.baseNodes);
-            this.renderer.setDebugPosition(result);
-            this.dbg_pos.x = result[0];
-            this.dbg_pos.y = result[1];
+            this.position.error = result[2];
         }
     }
 });

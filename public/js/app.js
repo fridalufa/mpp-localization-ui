@@ -34,21 +34,19 @@ var app = new Vue({
             d2: 0,
             d3: 0
         },
+        width: 8,
+        height: 6,
         baseNodes: {
-            d1: [10, 14],
-            d2: [790, 14],
-            d3: [400, 590]
-        },
-        baseFrame: {
-            width: 800,
-            height: 600
+            d1: [0.1, 0.14],
+            d2: [7.9, 0.14],
+            d3: [4, 5.9]
         },
         position: {
             x: 0,
-            y: 0
+            y: 0,
+            error: 0
         },
-        receiveCount: 0,
-        dbg_receiveCount: 0
+        receiveCount: 0
     },
 
     ready: function ready() {
@@ -96,15 +94,16 @@ var app = new Vue({
             this.connected = true;
 
             this.client.subscribe("position/#");
-            this.client.subscribe("position_debug/#");
 
-            this.renderer = new _CanvasRenderer2.default(this.$el.querySelector('canvas'), this.baseNodes, this.distances);
+            this.renderer = new _CanvasRenderer2.default(this.$el.querySelector('canvas'), this.baseNodes, this.distances, this.width, this.height);
         },
 
         onMessageArrived: function onMessageArrived(message) {
             if (message.destinationName.indexOf("position/") == 0) {
                 var index = message.destinationName.substring(9);
-                this.distances[index] = parseFloat(message.payloadString);
+                this.distances[index] = parseFloat(message.payloadString) / 100.0; // scale...
+
+                console.log(parseFloat(message.payloadString) / 100.0);
                 if (this.receiveCount == 2) {
                     this.calculatePosition();
                     this.receiveCount = 0;
@@ -112,35 +111,17 @@ var app = new Vue({
                     this.receiveCount++;
                 }
             }
-
-            if (message.destinationName.indexOf("position_debug/") == 0) {
-                var index = message.destinationName.substring(15);
-                this.dbg_distances[index] = parseFloat(message.payloadString);
-                if (this.dbg_receiveCount == 2) {
-                    this.calculateDebugPosition();
-                    this.dbg_receiveCount = 0;
-                } else {
-                    this.dbg_receiveCount++;
-                }
-            }
         },
 
         calculatePosition: function calculatePosition() {
             this.renderer.updateDistances(this.distances);
+
             var pcalc = new _PositionCalculator2.default();
             var result = pcalc.calculatePosition(this.distances, this.baseNodes);
             this.renderer.setPosition(result);
             this.position.x = result[0];
             this.position.y = result[1];
-        },
-
-        calculateDebugPosition: function calculateDebugPosition() {
-            //this.renderer.updateDistances(this.dbg_distances);
-            var pcalc = new _PositionCalculator2.default();
-            var result = pcalc.calculatePosition(this.distances, this.baseNodes);
-            this.renderer.setDebugPosition(result);
-            this.dbg_pos.x = result[0];
-            this.dbg_pos.y = result[1];
+            this.position.error = result[2];
         }
     }
 });
@@ -164,7 +145,7 @@ if (module.hot) {(function () {  module.hot.accept()
   var hotAPI = require("vue-hot-reload-api")
   hotAPI.install(require("vue"), true)
   if (!hotAPI.compatible) return
-  var id = "/Users/davidbohn/Development/indoor-location-test/assets/js/components/Panel.vue"
+  var id = "/Users/friedrich/Sites/mpp-localization-ui/assets/js/components/Panel.vue"
   module.hot.dispose(function () {
     require("vueify-insert-css").cache["\n.panel__header h3 {\n    margin: 0;\n    padding: 0;\n    font-weight: 300;\n    color: #fff;\n}\n\n.panel {\n    background-color: #fff;\n    margin-bottom: 20px;\n}\n\n.panel__header {\n    border-bottom: 1px solid #16a085;\n    padding: 5px;\n    background-color: #1abc9c;\n    cursor: pointer;\n    -webkit-user-select: none;\n       -moz-user-select: none;\n        -ms-user-select: none;\n            user-select: none;\n}\n\n.panel__header-orange {\n    background-color: #f39c12;\n    border-bottom: 1px solid #e67e22;\n}\n\n.panel__header_toggler {\n    float: right;\n    color: #fff;\n}\n\n.panel__content {\n    padding: 10px;\n}\n"] = false
     document.head.removeChild(__vueify_style__)
@@ -181,110 +162,121 @@ if (module.hot) {(function () {  module.hot.accept()
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
 Object.defineProperty(exports, "__esModule", {
-	value: true
+    value: true
 });
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 var CanvasRenderer = function () {
-	function CanvasRenderer(canvas, baseNodes, distances) {
-		_classCallCheck(this, CanvasRenderer);
+    function CanvasRenderer(canvas, baseNodes, distances, width, height) {
+        _classCallCheck(this, CanvasRenderer);
 
-		this.canvas = canvas;
-		this.baseNodes = baseNodes;
-		this.distances = distances;
-		this.position = null;
-		this.lastTick = null;
-		this.drawBubble = true;
-		this.dbg_pos = null;
+        this.canvas = canvas;
+        this.baseNodes = baseNodes;
+        this.distances = distances;
+        this.width = width;
+        this.height = height;
+        this.scale = 100;
+        this.position = null;
+        this.lastTick = null;
+        this.drawBubble = true;
 
-		this.colors = {
-			d1: '#e67e22',
-			d2: '#9f60b9',
-			d3: '#3498db'
-		};
+        this.canvas.width = this.width * this.scale;
+        this.canvas.height = this.height * this.scale;
 
-		window.requestAnimationFrame(this.draw.bind(this));
-	}
+        this.colors = {
+            d1: '#e67e22',
+            d2: '#9f60b9',
+            d3: '#3498db'
+        };
 
-	_createClass(CanvasRenderer, [{
-		key: 'updateDistances',
-		value: function updateDistances(distances) {
-			this.distances = distances;
-		}
-	}, {
-		key: 'setPosition',
-		value: function setPosition(position) {
-			this.position = position;
-		}
-	}, {
-		key: 'setDebugPosition',
-		value: function setDebugPosition(position) {
-			this.dbg_pos = position;
-		}
-	}, {
-		key: 'draw',
-		value: function draw() {
+        window.requestAnimationFrame(this.draw.bind(this));
+    }
 
-			if (this.canvas.getContext) {
-				var ctx = this.canvas.getContext('2d');
-				ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+    _createClass(CanvasRenderer, [{
+        key: 'updateDistances',
+        value: function updateDistances(distances) {
+            for (var node in this.baseNodes) {
+                this.distances[node] = distances[node] * this.scale;
+            }
+        }
+    }, {
+        key: 'setPosition',
+        value: function setPosition(position) {
+            this.position = this.calculateRelativePosition(position);
+        }
+    }, {
+        key: 'draw',
+        value: function draw() {
 
-				for (var node in this.baseNodes) {
-					var coords = this.baseNodes[node];
-					var dist = this.distances[node];
-					ctx.beginPath();
-					ctx.arc(coords[0], coords[1], dist + dist * 0.2, 0, Math.PI * 2);
-					ctx.strokeStyle = this.colors[node];
-					ctx.stroke();
-					ctx.arc(coords[0], coords[1], dist, 0, Math.PI * 2);
-					ctx.strokeStyle = this.colors[node];
-					ctx.stroke();
-					ctx.arc(coords[0], coords[1], dist - dist * 0.2, 0, Math.PI * 2);
-					ctx.strokeStyle = this.colors[node];
-					ctx.stroke();
-					ctx.beginPath();
-					ctx.arc(coords[0], coords[1], 10, 0, Math.PI * 2);
-					ctx.fillStyle = this.colors[node];
-					ctx.fill();
-					ctx.fillStyle = "#ffffff";
-					ctx.fillText(node, coords[0] - 5, coords[1] + 4);
-				}
+            if (this.canvas.getContext) {
+                var ctx = this.canvas.getContext('2d');
+                ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
-				if (this.position) {
-					var now = Date.now();
+                this.drawRanges(ctx);
 
-					if (this.lastTick == null || now - this.lastTick > 500) {
-						this.drawBubble = !this.drawBubble;
-						this.lastTick = now;
-					}
+                if (this.position) {
+                    var now = Date.now();
 
-					if (this.drawBubble) {
-						ctx.beginPath();
-						ctx.moveTo(this.position[0], this.position[1]);
+                    if (this.lastTick == null || now - this.lastTick > 500) {
+                        this.drawBubble = !this.drawBubble;
+                        this.lastTick = now;
+                    }
 
-						ctx.arc(this.position[0], this.position[1], 6, 0, Math.PI * 2);
-						ctx.fillStyle = '#1abc9c';
-						ctx.fill();
+                    if (this.drawBubble) {
+                        ctx.beginPath();
+                        ctx.arc(this.position[0] * this.scale, this.position[1] * this.scale, 6, 0, Math.PI * 2);
+                        ctx.fillStyle = '#1abc9c';
+                        ctx.fill();
 
-						//console.log(this.dbg_pos);
-						if (this.dbg_pos) {
-							ctx.beginPath();
-							ctx.moveTo(this.dbg_pos[0], this.dbg_pos[1]);
+                        ctx.beginPath();
+                        ctx.arc(this.position[0], this.position[1], this.position[2], 0, Math.PI * 2);
+                        ctx.fillStyle = '#cccccc';
+                        ctx.stroke();
+                    }
+                }
 
-							ctx.arc(this.dbg_pos[0], this.dbg_pos[1], 6, 0, Math.PI * 2);
-							ctx.fillStyle = '#ff0000';
-							ctx.fill();
-						}
-					}
-				}
+                window.requestAnimationFrame(this.draw.bind(this));
+            }
+        }
+    }, {
+        key: 'drawRanges',
+        value: function drawRanges(ctx) {
+            for (var node in this.baseNodes) {
+                var coords = this.baseNodes[node];
+                var dist = this.distances[node];
 
-				window.requestAnimationFrame(this.draw.bind(this));
-			}
-		}
-	}]);
+                ctx.beginPath();
+                ctx.arc(coords[0] * this.scale, coords[1] * this.scale, dist + dist * 0.2, 0, Math.PI * 2);
+                ctx.strokeStyle = this.colors[node];
+                ctx.stroke();
 
-	return CanvasRenderer;
+                //ctx.beginPath();
+                //ctx.arc(coords[0], coords[1], dist, 0, Math.PI*2);
+                //ctx.strokeStyle = this.colors[node];
+                //ctx.stroke();
+
+                ctx.beginPath();
+                ctx.arc(coords[0] * this.scale, coords[1] * this.scale, dist - dist * 0.2, 0, Math.PI * 2);
+                ctx.strokeStyle = this.colors[node];
+                ctx.stroke();
+
+                ctx.beginPath();
+                ctx.arc(coords[0] * this.scale, coords[1] * this.scale, 10, 0, Math.PI * 2);
+                ctx.fillStyle = this.colors[node];
+                ctx.fill();
+                ctx.fillStyle = "#ffffff";
+                ctx.fillText(node, coords[0] - 5, coords[1] + 4);
+            }
+        }
+    }, {
+        key: 'calculateRelativePosition',
+        value: function calculateRelativePosition(coords) {
+            return [coords[0] * this.scale, coords[1] * this.scale, coords[2] * this.scale];
+        }
+    }]);
+
+    return CanvasRenderer;
 }();
 
 exports.default = CanvasRenderer;
@@ -306,8 +298,8 @@ var PositionCalculator = function () {
 	}
 
 	_createClass(PositionCalculator, [{
-		key: 'calculatePosition',
-		value: function calculatePosition(distances, baseNodes) {
+		key: 'calculatePositionOld',
+		value: function calculatePositionOld(distances, baseNodes) {
 			var d1_2 = Math.pow(distances['d1'], 2);
 			var d2_2 = Math.pow(distances['d2'], 2);
 
@@ -320,6 +312,97 @@ var PositionCalculator = function () {
 			y += baseNodes['d1'][1];
 
 			return [x, y];
+		}
+	}, {
+		key: 'calculatePosition',
+		value: function calculatePosition(distances, baseNodes) {
+
+			var maxX = 8;
+			var maxY = 6;
+			var resolution = 0.05;
+
+			var x = 0.0;
+			var y = 0.0;
+
+			var validPositions = 0.0;
+
+			for (var cX = 0.0; cX < maxX; cX += resolution) {
+				for (var cY = 0.0; cY < maxY; cY += resolution) {
+					if (this.isPossiblePosition(cX, cY, distances, baseNodes)) {
+						x += cX;
+						y += cY;
+						validPositions++;
+					}
+				}
+			}
+
+			if (validPositions > 0) {
+				x /= validPositions;
+				y /= validPositions;
+			}
+
+			console.log([x, y, 25]);
+
+			return [x, y, 25];
+		}
+	}, {
+		key: 'isPossiblePosition',
+		value: function isPossiblePosition(x, y, distances, baseNodes) {
+
+			for (var node in baseNodes) {
+				var coords = baseNodes[node];
+				var dist = distances[node];
+
+				var minDist = dist - dist * 0.2;
+				var maxDist = dist + dist * 0.2;
+
+				var disHelper = function disHelper(x1, y1, x2, y2) {
+					return Math.sqrt((x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1));
+				};
+
+				var rDis = disHelper(x, y, coords[0], coords[1]);
+
+				if (rDis < minDist) {
+					return false;
+				}
+
+				if (rDis > maxDist) {
+					return false;
+				}
+			}
+
+			return true;
+		}
+	}, {
+		key: 'calculateRangeCoords',
+		value: function calculateRangeCoords() {
+
+			var coords = {
+				min: {
+					x: 0,
+					y: 0
+				},
+				max: {
+					x: Infinity,
+					y: Infinity
+				}
+			};
+
+			for (var node in this.baseNodes) {
+				var nodeCoords = this.baseNodes[node];
+				var dist = this.distances[node];
+
+				var maxDist = dist + dist * 0.2;
+
+				if (nodeCoords[0] + maxDist > coords.max.x) {
+					coords.max.x = nodeCoords[0] + maxDist;
+				}
+				if (nodeCoords[1] + maxDist > coords.max.y) {
+					coords.max.y = nodeCoords[1] + maxDist;
+				}
+			}
+
+			return coords;
 		}
 	}]);
 
