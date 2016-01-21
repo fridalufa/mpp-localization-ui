@@ -17,6 +17,11 @@ var app = new Vue({
 			d2: 0,
 			d3: 0
 		},
+        dbg_distances: {
+            d1: 0,
+            d2: 0,
+            d3: 0
+        },
 		baseNodes: {
 			d1: [10,14],
 			d2: [790, 14],
@@ -30,7 +35,8 @@ var app = new Vue({
             x: 0,
             y: 0
         },
-		receiveCount: 0
+        receiveCount: 0,
+		dbg_receiveCount: 0
 	},
 
 	ready: function() {
@@ -78,6 +84,7 @@ var app = new Vue({
             this.connected = true;
 
             this.client.subscribe("position/#");
+            this.client.subscribe("position_debug/#");
 
             this.renderer = new CanvasRenderer(this.$el.querySelector('canvas'), this.baseNodes, this.distances);
         },
@@ -93,6 +100,17 @@ var app = new Vue({
             		this.receiveCount++;
             	}
             }
+
+            if (message.destinationName.indexOf("position_debug/") == 0) {
+                var index = message.destinationName.substring(15);
+                this.dbg_distances[index] = parseFloat(message.payloadString);
+                if (this.dbg_receiveCount == 2) {
+                    this.calculateDebugPosition();
+                    this.dbg_receiveCount = 0;
+                } else {
+                    this.dbg_receiveCount++;
+                }
+            }
         },
 
         calculatePosition: function() {
@@ -102,6 +120,15 @@ var app = new Vue({
             this.renderer.setPosition(result);
             this.position.x = result[0];
             this.position.y = result[1];
+        },
+
+        calculateDebugPosition: function() {
+            //this.renderer.updateDistances(this.dbg_distances);
+            var pcalc = new PositionCalculator();
+            var result = pcalc.calculatePosition(this.distances, this.baseNodes);
+            this.renderer.setDebugPosition(result);
+            this.dbg_pos.x = result[0];
+            this.dbg_pos.y = result[1];
         }
     }
 });

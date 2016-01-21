@@ -29,6 +29,11 @@ var app = new Vue({
             d2: 0,
             d3: 0
         },
+        dbg_distances: {
+            d1: 0,
+            d2: 0,
+            d3: 0
+        },
         baseNodes: {
             d1: [10, 14],
             d2: [790, 14],
@@ -42,7 +47,8 @@ var app = new Vue({
             x: 0,
             y: 0
         },
-        receiveCount: 0
+        receiveCount: 0,
+        dbg_receiveCount: 0
     },
 
     ready: function ready() {
@@ -90,6 +96,7 @@ var app = new Vue({
             this.connected = true;
 
             this.client.subscribe("position/#");
+            this.client.subscribe("position_debug/#");
 
             this.renderer = new _CanvasRenderer2.default(this.$el.querySelector('canvas'), this.baseNodes, this.distances);
         },
@@ -105,6 +112,17 @@ var app = new Vue({
                     this.receiveCount++;
                 }
             }
+
+            if (message.destinationName.indexOf("position_debug/") == 0) {
+                var index = message.destinationName.substring(15);
+                this.dbg_distances[index] = parseFloat(message.payloadString);
+                if (this.dbg_receiveCount == 2) {
+                    this.calculateDebugPosition();
+                    this.dbg_receiveCount = 0;
+                } else {
+                    this.dbg_receiveCount++;
+                }
+            }
         },
 
         calculatePosition: function calculatePosition() {
@@ -114,6 +132,15 @@ var app = new Vue({
             this.renderer.setPosition(result);
             this.position.x = result[0];
             this.position.y = result[1];
+        },
+
+        calculateDebugPosition: function calculateDebugPosition() {
+            //this.renderer.updateDistances(this.dbg_distances);
+            var pcalc = new _PositionCalculator2.default();
+            var result = pcalc.calculatePosition(this.distances, this.baseNodes);
+            this.renderer.setDebugPosition(result);
+            this.dbg_pos.x = result[0];
+            this.dbg_pos.y = result[1];
         }
     }
 });
@@ -169,6 +196,7 @@ var CanvasRenderer = function () {
 		this.position = null;
 		this.lastTick = null;
 		this.drawBubble = true;
+		this.dbg_pos = null;
 
 		this.colors = {
 			d1: '#e67e22',
@@ -190,6 +218,11 @@ var CanvasRenderer = function () {
 			this.position = position;
 		}
 	}, {
+		key: 'setDebugPosition',
+		value: function setDebugPosition(position) {
+			this.dbg_pos = position;
+		}
+	}, {
 		key: 'draw',
 		value: function draw() {
 
@@ -201,7 +234,13 @@ var CanvasRenderer = function () {
 					var coords = this.baseNodes[node];
 					var dist = this.distances[node];
 					ctx.beginPath();
+					ctx.arc(coords[0], coords[1], dist + dist * 0.2, 0, Math.PI * 2);
+					ctx.strokeStyle = this.colors[node];
+					ctx.stroke();
 					ctx.arc(coords[0], coords[1], dist, 0, Math.PI * 2);
+					ctx.strokeStyle = this.colors[node];
+					ctx.stroke();
+					ctx.arc(coords[0], coords[1], dist - dist * 0.2, 0, Math.PI * 2);
 					ctx.strokeStyle = this.colors[node];
 					ctx.stroke();
 					ctx.beginPath();
@@ -222,9 +261,21 @@ var CanvasRenderer = function () {
 
 					if (this.drawBubble) {
 						ctx.beginPath();
+						ctx.moveTo(this.position[0], this.position[1]);
+
 						ctx.arc(this.position[0], this.position[1], 6, 0, Math.PI * 2);
 						ctx.fillStyle = '#1abc9c';
 						ctx.fill();
+
+						//console.log(this.dbg_pos);
+						if (this.dbg_pos) {
+							ctx.beginPath();
+							ctx.moveTo(this.dbg_pos[0], this.dbg_pos[1]);
+
+							ctx.arc(this.dbg_pos[0], this.dbg_pos[1], 6, 0, Math.PI * 2);
+							ctx.fillStyle = '#ff0000';
+							ctx.fill();
+						}
 					}
 				}
 

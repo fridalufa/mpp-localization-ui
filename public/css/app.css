@@ -51,10 +51,12 @@ canvas {
   border-radius: 50%; }
 
 .not-connected {
-  background: #e74c3c; }
+  background: #e74c3c;
+  border: 1px solid #d62c1a; }
 
 .is-connected {
-  background: #27ae60; }
+  background: #27ae60;
+  border: 1px solid #1e8449; }
 
 .app-content {
   display: -webkit-flex;

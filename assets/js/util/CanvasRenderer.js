@@ -7,6 +7,7 @@ export default class CanvasRenderer {
 		this.position = null;
 		this.lastTick = null;
 		this.drawBubble = true;
+		this.dbg_pos = null;
 
 		this.colors = {
 			d1: '#e67e22',
@@ -25,6 +26,10 @@ export default class CanvasRenderer {
 		this.position = position;
 	}
 
+	setDebugPosition(position) {
+		this.dbg_pos = position;
+	}
+
 	draw() {
 		
 		if (this.canvas.getContext) {
@@ -35,7 +40,13 @@ export default class CanvasRenderer {
     			var coords = this.baseNodes[node];
     			var dist = this.distances[node];
     			ctx.beginPath();
+    			ctx.arc(coords[0], coords[1], dist+dist*0.2, 0, Math.PI*2);
+    			ctx.strokeStyle = this.colors[node];
+    			ctx.stroke();
     			ctx.arc(coords[0], coords[1], dist, 0, Math.PI*2);
+    			ctx.strokeStyle = this.colors[node];
+    			ctx.stroke();
+    			ctx.arc(coords[0], coords[1], dist-dist*0.2, 0, Math.PI*2);
     			ctx.strokeStyle = this.colors[node];
     			ctx.stroke();
     			ctx.beginPath();
@@ -56,9 +67,21 @@ export default class CanvasRenderer {
 
 				if (this.drawBubble) {
 					ctx.beginPath();
+					ctx.moveTo(this.position[0], this.position[1]);
+					
 	        		ctx.arc(this.position[0], this.position[1], 6, 0, Math.PI*2);
 	        		ctx.fillStyle = '#1abc9c';
 	        		ctx.fill();
+
+	        		//console.log(this.dbg_pos);
+	        		if(this.dbg_pos) {
+	        			ctx.beginPath();
+	        			ctx.moveTo(this.dbg_pos[0], this.dbg_pos[1]);
+	        			
+		        		ctx.arc(this.dbg_pos[0], this.dbg_pos[1], 6, 0, Math.PI*2);
+		        		ctx.fillStyle = '#ff0000';
+		        		ctx.fill();
+	        		}
 				}
     		}
 

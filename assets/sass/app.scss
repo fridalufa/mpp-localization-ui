@@ -49,10 +49,12 @@ canvas {
 
 .not-connected {
 	background: #e74c3c;
+	border: 1px solid darken(#e74c3c, 10%);
 }
 
 .is-connected {
 	background: #27ae60;
+	border: 1px solid darken(#27ae60, 10%);
 }
 
 .app-content {

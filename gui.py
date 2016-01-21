@@ -96,6 +96,7 @@ class App(object):
 			dist = self.cDistance(self.point, station)
 			distWithError = self.errorify(dist)
 			self.client.publish("position/d%d" %(i), "%.2f" %distWithError)
+			self.client.publish("position_debug/d%d" %(i), "%.2f" %dist)
 			i += 1
 			stri += "%.2f m, " %(dist)
 		stri += "at (%.2f, %.2f)" %(self.point[0], self.point[1])
