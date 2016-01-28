@@ -34,10 +34,20 @@
                 </panel>
                 <panel title="Last Measured Distances" header-color="green">
                     <ul class="distances">
-                      <li v-for="(node, dist) in distances">
-                        {{ node }}: {{ dist }}
-                      </li>
+                        <li v-for="(node, dist) in distances">
+                            {{ node }}: {{ dist }}
+                        </li>
                     </ul>
+                </panel>
+                <panel title="Last Measured Distances" header-color="green">
+                    <select class="distances" v-model="error.value">
+                        <option v-for="item in errors">
+                            {{ item }}
+                        </option>
+                    </select>
+
+                    <label><input type="radio" v-model="error.type" value="absolute"> absolute</label>
+                    <label><input type="radio" v-model="error.type" value="relative"> relative</label>
                 </panel>
             </div>
         </div>

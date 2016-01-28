@@ -70,12 +70,16 @@ export default class CanvasRenderer {
     }
 
     drawRanges(ctx) {
+        var pcalc = new PositionCalculator(this.error);
+
         for (var node in this.baseNodes) {
             var coords = this.baseNodes[node];
             var dist = this.distances[node];
 
+            var error = pcalc.calculateError(dist);
+
             ctx.beginPath();
-            ctx.arc(coords[0] * this.scale, coords[1] * this.scale, (dist + dist * this.error) * this.scale, 0, Math.PI * 2);
+            ctx.arc(coords[0] * this.scale, coords[1] * this.scale, (dist + error) * this.scale, 0, Math.PI * 2);
             ctx.strokeStyle = this.colors[node];
             ctx.stroke();
 
@@ -85,7 +89,7 @@ export default class CanvasRenderer {
             //ctx.stroke();
 
             ctx.beginPath();
-            ctx.arc(coords[0] * this.scale, coords[1] * this.scale, (dist - dist * this.error) * this.scale, 0, Math.PI * 2);
+            ctx.arc(coords[0] * this.scale, coords[1] * this.scale, (dist - error) * this.scale, 0, Math.PI * 2);
             ctx.strokeStyle = this.colors[node];
             ctx.stroke();
 
@@ -96,8 +100,6 @@ export default class CanvasRenderer {
             ctx.fillStyle = "#ffffff";
             ctx.fillText(node, coords[0] * this.scale - 5, coords[1] * this.scale + 4);
         }
-
-        var pcalc = new PositionCalculator(this.error);
 
         var maxX = 8;
         var maxY = 6;
