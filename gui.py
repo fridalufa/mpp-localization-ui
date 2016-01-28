@@ -22,7 +22,7 @@ class App(object):
 		self.stations = [(10,14), (790, 14), (400, 590)]
 		self.point = (800/2-8, 600/2-8)
 		self.curPos = None
-		self.errorRate = 0.2
+		self.errorRate = 0.1
 		self.client = mqtt.Client()
 		print "Using host %s" %HOST
 		if not USERNAME == None:

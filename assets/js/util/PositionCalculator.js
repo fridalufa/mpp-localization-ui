@@ -1,6 +1,10 @@
 
 export default class PositionCalculator {
 
+	constructor(error) {
+		this.error = error;
+	}
+
 	calculatePositionOld(distances, baseNodes) {
 		var d1_2 = Math.pow(distances['d1'], 2);
 		var d2_2 = Math.pow(distances['d2'], 2);
@@ -42,9 +46,7 @@ export default class PositionCalculator {
 			y /= validPositions;
 		}
 
-        console.log([x, y, 25]);
-
-		return [x, y, 25];
+		return [x, y, 0.25];
 	}
 
 	isPossiblePosition(x, y, distances, baseNodes) {
@@ -53,8 +55,8 @@ export default class PositionCalculator {
 			var coords = baseNodes[node];
 			var dist = distances[node];
 
-			var minDist = dist - dist * 0.2;
-			var maxDist = dist + dist * 0.2;
+			var minDist = dist - dist * this.error;
+			var maxDist = dist + dist * this.error;
 
 			var disHelper = function (x1, y1, x2, y2) {
 				return Math.sqrt((x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1));
@@ -91,7 +93,7 @@ export default class PositionCalculator {
 			var nodeCoords = this.baseNodes[node];
 			var dist = this.distances[node];
 
-			var maxDist = dist + dist * 0.2;
+			var maxDist = dist + dist * this.error;
 
 			if (nodeCoords[0] + maxDist > coords.max.x) {
 				coords.max.x = nodeCoords[0] + maxDist;

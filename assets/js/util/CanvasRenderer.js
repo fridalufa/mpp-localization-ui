@@ -1,11 +1,14 @@
+import PositionCalculator from './PositionCalculator.js';
+
 export default class CanvasRenderer {
-    constructor(canvas, baseNodes, distances, width, height) {
+    constructor(canvas, baseNodes, distances, width, height, error) {
 
         this.canvas = canvas;
         this.baseNodes = baseNodes;
         this.distances = distances;
         this.width = width;
         this.height = height;
+        this.error = error;
         this.scale = 100;
         this.position = null;
         this.lastTick = null;
@@ -25,12 +28,12 @@ export default class CanvasRenderer {
 
     updateDistances(distances) {
         for (var node in this.baseNodes) {
-            this.distances[node] = distances[node] * this.scale;
+            this.distances[node] = distances[node];
         }
     }
 
     setPosition(position) {
-        this.position = this.calculateRelativePosition(position);
+        this.position = position;
     }
 
     draw() {
@@ -56,7 +59,7 @@ export default class CanvasRenderer {
                     ctx.fill();
 
                     ctx.beginPath();
-                    ctx.arc(this.position[0], this.position[1], this.position[2], 0, Math.PI * 2);
+                    ctx.arc(this.position[0] * this.scale, this.position[1] * this.scale, this.position[2] * this.scale, 0, Math.PI * 2);
                     ctx.fillStyle = '#cccccc';
                     ctx.stroke();
                 }
@@ -72,7 +75,7 @@ export default class CanvasRenderer {
             var dist = this.distances[node];
 
             ctx.beginPath();
-            ctx.arc(coords[0] * this.scale, coords[1] * this.scale, dist + dist * 0.2, 0, Math.PI * 2);
+            ctx.arc(coords[0] * this.scale, coords[1] * this.scale, (dist + dist * this.error) * this.scale, 0, Math.PI * 2);
             ctx.strokeStyle = this.colors[node];
             ctx.stroke();
 
@@ -82,7 +85,7 @@ export default class CanvasRenderer {
             //ctx.stroke();
 
             ctx.beginPath();
-            ctx.arc(coords[0] * this.scale, coords[1] * this.scale, dist - dist * 0.2, 0, Math.PI * 2);
+            ctx.arc(coords[0] * this.scale, coords[1] * this.scale, (dist - dist * this.error) * this.scale, 0, Math.PI * 2);
             ctx.strokeStyle = this.colors[node];
             ctx.stroke();
 
@@ -91,15 +94,29 @@ export default class CanvasRenderer {
             ctx.fillStyle = this.colors[node];
             ctx.fill();
             ctx.fillStyle = "#ffffff";
-            ctx.fillText(node, coords[0] - 5, coords[1] + 4);
+            ctx.fillText(node, coords[0] * this.scale - 5, coords[1] * this.scale + 4);
         }
-    }
 
-    calculateRelativePosition(coords) {
-        return [
-            coords[0] * this.scale,
-            coords[1] * this.scale,
-            coords[2] * this.scale
-        ];
+        var pcalc = new PositionCalculator(this.error);
+
+        var maxX = 8;
+        var maxY = 6;
+        var resolution = 0.10;
+
+        for (var cX = 0.0; cX < maxX; cX += resolution) {
+            for (var cY = 0.0; cY < maxY; cY += resolution) {
+                if (pcalc.isPossiblePosition(cX, cY, this.distances, this.baseNodes)) {
+                    ctx.fillRect(
+                        (cX - resolution / 2) * this.scale,
+                        (cY - resolution / 2) * this.scale,
+                        resolution * this.scale,
+                        resolution * this.scale
+                    );
+                    ctx.fillStyle = "#c1c1c1";
+                    ctx.fill();
+                }
+            }
+        }
+
     }
 }

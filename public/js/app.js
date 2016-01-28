@@ -29,17 +29,12 @@ var app = new Vue({
             d2: 0,
             d3: 0
         },
-        dbg_distances: {
-            d1: 0,
-            d2: 0,
-            d3: 0
-        },
-        width: 8,
-        height: 6,
+        width: 7.413,
+        height: 6.157,
         baseNodes: {
-            d1: [0.1, 0.14],
-            d2: [7.9, 0.14],
-            d3: [4, 5.9]
+            d1: [0.4, 0.4],
+            d2: [7.413 - 0.44, 0.602],
+            d3: [3.7, 6.157]
         },
         position: {
             x: 0,
@@ -93,30 +88,32 @@ var app = new Vue({
             this.status = "Verbunden";
             this.connected = true;
 
-            this.client.subscribe("position/#");
+            this.client.subscribe("pos/#");
 
-            this.renderer = new _CanvasRenderer2.default(this.$el.querySelector('canvas'), this.baseNodes, this.distances, this.width, this.height);
+            this.renderer = new _CanvasRenderer2.default(this.$el.querySelector('canvas'), this.baseNodes, { d1: 0, d2: 0, d3: 0 }, this.width, this.height, 0.25);
         },
 
         onMessageArrived: function onMessageArrived(message) {
-            if (message.destinationName.indexOf("position/") == 0) {
-                var index = message.destinationName.substring(9);
-                this.distances[index] = parseFloat(message.payloadString) / 100.0; // scale...
+            var channelName = "pos/";
 
-                console.log(parseFloat(message.payloadString) / 100.0);
-                if (this.receiveCount == 2) {
-                    this.calculatePosition();
-                    this.receiveCount = 0;
-                } else {
-                    this.receiveCount++;
-                }
+            if (message.destinationName.indexOf(channelName) == 0) {
+                var index = message.destinationName.substring(channelName.length);
+                this.distances[index] = parseFloat(message.payloadString);
+
+                this.tryCalculatePosition();
+            }
+        },
+
+        tryCalculatePosition: function tryCalculatePosition() {
+            if (this.distances.d1 > 0 && this.distances.d2 > 0 && this.distances.d3 > 0) {
+                this.calculatePosition();
             }
         },
 
         calculatePosition: function calculatePosition() {
             this.renderer.updateDistances(this.distances);
 
-            var pcalc = new _PositionCalculator2.default();
+            var pcalc = new _PositionCalculator2.default(0.25);
             var result = pcalc.calculatePosition(this.distances, this.baseNodes);
             this.renderer.setPosition(result);
             this.position.x = result[0];
@@ -165,10 +162,16 @@ Object.defineProperty(exports, "__esModule", {
     value: true
 });
 
+var _PositionCalculator = require('./PositionCalculator.js');
+
+var _PositionCalculator2 = _interopRequireDefault(_PositionCalculator);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 var CanvasRenderer = function () {
-    function CanvasRenderer(canvas, baseNodes, distances, width, height) {
+    function CanvasRenderer(canvas, baseNodes, distances, width, height, error) {
         _classCallCheck(this, CanvasRenderer);
 
         this.canvas = canvas;
@@ -176,6 +179,7 @@ var CanvasRenderer = function () {
         this.distances = distances;
         this.width = width;
         this.height = height;
+        this.error = error;
         this.scale = 100;
         this.position = null;
         this.lastTick = null;
@@ -197,13 +201,13 @@ var CanvasRenderer = function () {
         key: 'updateDistances',
         value: function updateDistances(distances) {
             for (var node in this.baseNodes) {
-                this.distances[node] = distances[node] * this.scale;
+                this.distances[node] = distances[node];
             }
         }
     }, {
         key: 'setPosition',
         value: function setPosition(position) {
-            this.position = this.calculateRelativePosition(position);
+            this.position = position;
         }
     }, {
         key: 'draw',
@@ -230,7 +234,7 @@ var CanvasRenderer = function () {
                         ctx.fill();
 
                         ctx.beginPath();
-                        ctx.arc(this.position[0], this.position[1], this.position[2], 0, Math.PI * 2);
+                        ctx.arc(this.position[0] * this.scale, this.position[1] * this.scale, this.position[2] * this.scale, 0, Math.PI * 2);
                         ctx.fillStyle = '#cccccc';
                         ctx.stroke();
                     }
@@ -247,7 +251,7 @@ var CanvasRenderer = function () {
                 var dist = this.distances[node];
 
                 ctx.beginPath();
-                ctx.arc(coords[0] * this.scale, coords[1] * this.scale, dist + dist * 0.2, 0, Math.PI * 2);
+                ctx.arc(coords[0] * this.scale, coords[1] * this.scale, (dist + dist * this.error) * this.scale, 0, Math.PI * 2);
                 ctx.strokeStyle = this.colors[node];
                 ctx.stroke();
 
@@ -257,7 +261,7 @@ var CanvasRenderer = function () {
                 //ctx.stroke();
 
                 ctx.beginPath();
-                ctx.arc(coords[0] * this.scale, coords[1] * this.scale, dist - dist * 0.2, 0, Math.PI * 2);
+                ctx.arc(coords[0] * this.scale, coords[1] * this.scale, (dist - dist * this.error) * this.scale, 0, Math.PI * 2);
                 ctx.strokeStyle = this.colors[node];
                 ctx.stroke();
 
@@ -266,13 +270,24 @@ var CanvasRenderer = function () {
                 ctx.fillStyle = this.colors[node];
                 ctx.fill();
                 ctx.fillStyle = "#ffffff";
-                ctx.fillText(node, coords[0] - 5, coords[1] + 4);
+                ctx.fillText(node, coords[0] * this.scale - 5, coords[1] * this.scale + 4);
             }
-        }
-    }, {
-        key: 'calculateRelativePosition',
-        value: function calculateRelativePosition(coords) {
-            return [coords[0] * this.scale, coords[1] * this.scale, coords[2] * this.scale];
+
+            var pcalc = new _PositionCalculator2.default(this.error);
+
+            var maxX = 8;
+            var maxY = 6;
+            var resolution = 0.10;
+
+            for (var cX = 0.0; cX < maxX; cX += resolution) {
+                for (var cY = 0.0; cY < maxY; cY += resolution) {
+                    if (pcalc.isPossiblePosition(cX, cY, this.distances, this.baseNodes)) {
+                        ctx.fillRect((cX - resolution / 2) * this.scale, (cY - resolution / 2) * this.scale, resolution * this.scale, resolution * this.scale);
+                        ctx.fillStyle = "#c1c1c1";
+                        ctx.fill();
+                    }
+                }
+            }
         }
     }]);
 
@@ -281,7 +296,7 @@ var CanvasRenderer = function () {
 
 exports.default = CanvasRenderer;
 
-},{}],4:[function(require,module,exports){
+},{"./PositionCalculator.js":4}],4:[function(require,module,exports){
 'use strict';
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
@@ -293,8 +308,10 @@ Object.defineProperty(exports, "__esModule", {
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 var PositionCalculator = function () {
-	function PositionCalculator() {
+	function PositionCalculator(error) {
 		_classCallCheck(this, PositionCalculator);
+
+		this.error = error;
 	}
 
 	_createClass(PositionCalculator, [{
@@ -341,9 +358,7 @@ var PositionCalculator = function () {
 				y /= validPositions;
 			}
 
-			console.log([x, y, 25]);
-
-			return [x, y, 25];
+			return [x, y, 0.25];
 		}
 	}, {
 		key: 'isPossiblePosition',
@@ -353,8 +368,8 @@ var PositionCalculator = function () {
 				var coords = baseNodes[node];
 				var dist = distances[node];
 
-				var minDist = dist - dist * 0.2;
-				var maxDist = dist + dist * 0.2;
+				var minDist = dist - dist * this.error;
+				var maxDist = dist + dist * this.error;
 
 				var disHelper = function disHelper(x1, y1, x2, y2) {
 					return Math.sqrt((x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1));
@@ -392,7 +407,7 @@ var PositionCalculator = function () {
 				var nodeCoords = this.baseNodes[node];
 				var dist = this.distances[node];
 
-				var maxDist = dist + dist * 0.2;
+				var maxDist = dist + dist * this.error;
 
 				if (nodeCoords[0] + maxDist > coords.max.x) {
 					coords.max.x = nodeCoords[0] + maxDist;
