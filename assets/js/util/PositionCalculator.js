@@ -1,6 +1,11 @@
 
 export default class PositionCalculator {
-	calculatePosition(distances, baseNodes) {
+
+	constructor(error) {
+		this.error = error;
+	}
+
+	calculatePositionOld(distances, baseNodes) {
 		var d1_2 = Math.pow(distances['d1'], 2);
 		var d2_2 = Math.pow(distances['d2'], 2);
 
@@ -13,5 +18,91 @@ export default class PositionCalculator {
 		y += baseNodes['d1'][1];
 
 		return [x, y];
+	}
+
+	calculatePosition(distances, baseNodes) {
+
+		var maxX = 8;
+		var maxY = 6;
+		var resolution = 0.05;
+
+		var x = 0.0;
+		var y = 0.0;
+
+		var validPositions = 0.0;
+
+		for (var cX = 0.0; cX < maxX; cX += resolution) {
+			for (var cY = 0.0; cY < maxY; cY += resolution) {
+                if (this.isPossiblePosition(cX, cY, distances, baseNodes)) {
+					x += cX;
+					y += cY;
+					validPositions++;
+				}
+			}
+		}
+
+		if (validPositions > 0) {
+			x /= validPositions;
+			y /= validPositions;
+		}
+
+		return [x, y, 0.25];
+	}
+
+	isPossiblePosition(x, y, distances, baseNodes) {
+
+		for (var node in baseNodes) {
+			var coords = baseNodes[node];
+			var dist = distances[node];
+
+			var minDist = dist - dist * this.error;
+			var maxDist = dist + dist * this.error;
+
+			var disHelper = function (x1, y1, x2, y2) {
+				return Math.sqrt((x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1));
+			}
+
+			var rDis = disHelper(x, y, coords[0], coords[1]);
+
+			if (rDis < minDist) {
+				return false;
+			}
+
+			if (rDis > maxDist) {
+				return false;
+			}
+		}
+
+		return true;
+	}
+
+	calculateRangeCoords() {
+
+		var coords = {
+			min: {
+				x: 0,
+				y: 0
+			},
+			max: {
+				x: Infinity,
+				y: Infinity
+			}
+		};
+
+		for (var node in this.baseNodes) {
+			var nodeCoords = this.baseNodes[node];
+			var dist = this.distances[node];
+
+			var maxDist = dist + dist * this.error;
+
+			if (nodeCoords[0] + maxDist > coords.max.x) {
+				coords.max.x = nodeCoords[0] + maxDist;
+			}
+			if (nodeCoords[1] + maxDist > coords.max.y) {
+				coords.max.y = nodeCoords[1] + maxDist;
+			}
+		}
+
+		return coords;
 	}
 }
