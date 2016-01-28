@@ -29,6 +29,21 @@ var app = new Vue({
             y: 0,
             error: 0
         },
+        errors : [
+            0.05,
+            0.1,
+            0.15,
+            0.2,
+            0.25,
+            0.3,
+            0.35,
+            0.4,
+            0.45
+        ],
+        error: {
+            value: 0.3,
+            type: "absolute"
+        },
         receiveCount: 0
 	},
 
@@ -78,7 +93,7 @@ var app = new Vue({
 
             this.client.subscribe("pos/#");
 
-            this.renderer = new CanvasRenderer(this.$el.querySelector('canvas'), this.baseNodes, {d1:0,d2:0,d3:0}, this.width, this.height, 0.25);
+            this.renderer = new CanvasRenderer(this.$el.querySelector('canvas'), this.baseNodes, {d1:0,d2:0,d3:0}, this.width, this.height, this.error);
         },
 
         onMessageArrived: function(message) {
@@ -103,7 +118,7 @@ var app = new Vue({
         calculatePosition: function() {
             this.renderer.updateDistances(this.distances);
 
-            var pcalc = new PositionCalculator(0.25);
+            var pcalc = new PositionCalculator(this.error);
             var result = pcalc.calculatePosition(this.distances, this.baseNodes);
             this.renderer.setPosition(result);
             this.position.x = result[0];

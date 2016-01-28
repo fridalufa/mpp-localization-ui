@@ -41,6 +41,11 @@ var app = new Vue({
             y: 0,
             error: 0
         },
+        errors: [0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45],
+        error: {
+            value: 0.3,
+            type: "absolute"
+        },
         receiveCount: 0
     },
 
@@ -90,7 +95,7 @@ var app = new Vue({
 
             this.client.subscribe("pos/#");
 
-            this.renderer = new _CanvasRenderer2.default(this.$el.querySelector('canvas'), this.baseNodes, { d1: 0, d2: 0, d3: 0 }, this.width, this.height, 0.25);
+            this.renderer = new _CanvasRenderer2.default(this.$el.querySelector('canvas'), this.baseNodes, { d1: 0, d2: 0, d3: 0 }, this.width, this.height, this.error);
         },
 
         onMessageArrived: function onMessageArrived(message) {
@@ -113,7 +118,7 @@ var app = new Vue({
         calculatePosition: function calculatePosition() {
             this.renderer.updateDistances(this.distances);
 
-            var pcalc = new _PositionCalculator2.default(0.25);
+            var pcalc = new _PositionCalculator2.default(this.error);
             var result = pcalc.calculatePosition(this.distances, this.baseNodes);
             this.renderer.setPosition(result);
             this.position.x = result[0];
@@ -246,12 +251,16 @@ var CanvasRenderer = function () {
     }, {
         key: 'drawRanges',
         value: function drawRanges(ctx) {
+            var pcalc = new _PositionCalculator2.default(this.error);
+
             for (var node in this.baseNodes) {
                 var coords = this.baseNodes[node];
                 var dist = this.distances[node];
 
+                var error = pcalc.calculateError(dist);
+
                 ctx.beginPath();
-                ctx.arc(coords[0] * this.scale, coords[1] * this.scale, (dist + dist * this.error) * this.scale, 0, Math.PI * 2);
+                ctx.arc(coords[0] * this.scale, coords[1] * this.scale, (dist + error) * this.scale, 0, Math.PI * 2);
                 ctx.strokeStyle = this.colors[node];
                 ctx.stroke();
 
@@ -261,7 +270,7 @@ var CanvasRenderer = function () {
                 //ctx.stroke();
 
                 ctx.beginPath();
-                ctx.arc(coords[0] * this.scale, coords[1] * this.scale, (dist - dist * this.error) * this.scale, 0, Math.PI * 2);
+                ctx.arc(coords[0] * this.scale, coords[1] * this.scale, (dist - error) * this.scale, 0, Math.PI * 2);
                 ctx.strokeStyle = this.colors[node];
                 ctx.stroke();
 
@@ -272,8 +281,6 @@ var CanvasRenderer = function () {
                 ctx.fillStyle = "#ffffff";
                 ctx.fillText(node, coords[0] * this.scale - 5, coords[1] * this.scale + 4);
             }
-
-            var pcalc = new _PositionCalculator2.default(this.error);
 
             var maxX = 8;
             var maxY = 6;
@@ -368,8 +375,10 @@ var PositionCalculator = function () {
 				var coords = baseNodes[node];
 				var dist = distances[node];
 
-				var minDist = dist - dist * this.error;
-				var maxDist = dist + dist * this.error;
+				var error = this.calculateError(dist);
+
+				var minDist = dist - error;
+				var maxDist = dist + error;
 
 				var disHelper = function disHelper(x1, y1, x2, y2) {
 					return Math.sqrt((x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1));
@@ -407,7 +416,7 @@ var PositionCalculator = function () {
 				var nodeCoords = this.baseNodes[node];
 				var dist = this.distances[node];
 
-				var maxDist = dist + dist * this.error;
+				var maxDist = dist + this.calculateError(dist);
 
 				if (nodeCoords[0] + maxDist > coords.max.x) {
 					coords.max.x = nodeCoords[0] + maxDist;
@@ -418,6 +427,15 @@ var PositionCalculator = function () {
 			}
 
 			return coords;
+		}
+	}, {
+		key: 'calculateError',
+		value: function calculateError(value) {
+			if (this.error.type == "absolute") {
+				return this.error.value > value ? value : parseFloat(this.error.value);
+			}
+
+			return value * parseFloat(this.error.value);
 		}
 	}]);
 

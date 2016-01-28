@@ -55,8 +55,10 @@ export default class PositionCalculator {
 			var coords = baseNodes[node];
 			var dist = distances[node];
 
-			var minDist = dist - dist * this.error;
-			var maxDist = dist + dist * this.error;
+			var error = this.calculateError(dist);
+
+			var minDist = dist - error;
+			var maxDist = dist + error;
 
 			var disHelper = function (x1, y1, x2, y2) {
 				return Math.sqrt((x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1));
@@ -93,7 +95,7 @@ export default class PositionCalculator {
 			var nodeCoords = this.baseNodes[node];
 			var dist = this.distances[node];
 
-			var maxDist = dist + dist * this.error;
+			var maxDist = dist + this.calculateError(dist);
 
 			if (nodeCoords[0] + maxDist > coords.max.x) {
 				coords.max.x = nodeCoords[0] + maxDist;
@@ -104,5 +106,13 @@ export default class PositionCalculator {
 		}
 
 		return coords;
+	}
+
+	calculateError(value) {
+		if(this.error.type == "absolute") {
+			return this.error.value > value ? value : parseFloat(this.error.value);
+		}
+
+		return value * parseFloat(this.error.value);
 	}
 }
