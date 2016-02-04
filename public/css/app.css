@@ -77,4 +77,11 @@ canvas {
   -ms-flex-positive: 2;
   flex-grow: 2; }
 
+.error-selector {
+  display: -webkit-flex;
+  display: -ms-flexbox;
+  display: flex; }
+  .error-selector select, .error-selector label {
+    margin-right: 10px; }
+
 /*# sourceMappingURL=app.css.map */

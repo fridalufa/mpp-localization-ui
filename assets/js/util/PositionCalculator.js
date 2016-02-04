@@ -22,8 +22,8 @@ export default class PositionCalculator {
 
 	calculatePosition(distances, baseNodes) {
 
-		var maxX = 8;
-		var maxY = 6;
+		var maxX = 12;
+		var maxY = 12;
 		var resolution = 0.05;
 
 		var x = 0.0;

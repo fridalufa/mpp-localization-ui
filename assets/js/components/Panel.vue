@@ -1,6 +1,6 @@
 <template>
     <div class="panel">
-        <div class="panel__header" v-bind:class="{'panel__header-orange': headerColor == 'orange'}" @click="hide=!hide">
+        <div class="panel__header" v-bind:class="{'panel__header-orange': headerColor == 'orange', 'panel__header-red': headerColor == 'red'}" @click="hide=!hide">
             <div class="panel__header_toggler" v-show="!hide">▲</div>
             <div class="panel__header_toggler" v-show="hide">▼</div>
             <h3>{{ title }}</h3>
@@ -44,6 +44,11 @@ export default {
 .panel__header-orange {
     background-color: #f39c12;
     border-bottom: 1px solid #e67e22;
+}
+
+.panel__header-red {
+    background-color: #c0392b;
+    border-bottom: 1px solid #962d22;
 }
 
 .panel__header_toggler {

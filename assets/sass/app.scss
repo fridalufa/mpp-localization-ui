@@ -76,3 +76,11 @@ canvas {
     padding: 10px;
     flex-grow: 2;
 }
+
+.error-selector {
+    display: flex;
+
+    & select, & label {
+        margin-right: 10px;
+    }
+}

@@ -35,11 +35,12 @@
                 <panel title="Last Measured Distances" header-color="green">
                     <ul class="distances">
                         <li v-for="(node, dist) in distances">
-                            {{ node }}: {{ dist }}
+                            {{ node }}: {{ dist | float }}
                         </li>
                     </ul>
                 </panel>
-                <panel title="Error Settings" header-color="green">
+                <panel title="Error Settings" header-color="red">
+                <div class="error-selector"> 
                     <select class="distances" v-model="error.value">
                         <option v-for="item in errors">
                             {{ item }}
@@ -48,6 +49,8 @@
 
                     <label><input type="radio" v-model="error.type" value="absolute"> absolute</label>
                     <label><input type="radio" v-model="error.type" value="relative"> relative</label>
+                    <label for="alpha">&alpha;</label><input type="text" name="alpha" v-model="alpha">
+                    </div>
                 </panel>
             </div>
         </div>

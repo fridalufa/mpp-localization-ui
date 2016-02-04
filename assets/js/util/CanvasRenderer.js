@@ -101,10 +101,11 @@ export default class CanvasRenderer {
             ctx.fillText(node, coords[0] * this.scale - 5, coords[1] * this.scale + 4);
         }
 
-        var maxX = 8;
-        var maxY = 6;
+        var maxX = 12;
+        var maxY = 12;
         var resolution = 0.10;
-
+        
+        ctx.beginPath();
         for (var cX = 0.0; cX < maxX; cX += resolution) {
             for (var cY = 0.0; cY < maxY; cY += resolution) {
                 if (pcalc.isPossiblePosition(cX, cY, this.distances, this.baseNodes)) {

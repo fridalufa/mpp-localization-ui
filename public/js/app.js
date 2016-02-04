@@ -30,22 +30,23 @@ var app = new Vue({
             d3: 0
         },
         width: 7.413,
-        height: 6.157,
+        height: 10,
         baseNodes: {
-            d1: [0.4, 0.4],
-            d2: [7.413 - 0.44, 0.602],
-            d3: [3.7, 6.157]
+            d1: [0.4, 2.4],
+            d2: [7.413 - 0.44, 2.602],
+            d3: [3.7, 8.157]
         },
         position: {
             x: 0,
             y: 0,
             error: 0
         },
-        errors: [0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45],
+        errors: [0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5, 0.55],
         error: {
             value: 0.3,
             type: "absolute"
         },
+        alpha: 0.6,
         receiveCount: 0
     },
 
@@ -101,9 +102,12 @@ var app = new Vue({
         onMessageArrived: function onMessageArrived(message) {
             var channelName = "pos/";
 
+            this.alpha = parseFloat(this.alpha);
+
             if (message.destinationName.indexOf(channelName) == 0) {
                 var index = message.destinationName.substring(channelName.length);
-                this.distances[index] = parseFloat(message.payloadString);
+                var lastDistance = this.distances[index];
+                this.distances[index] = lastDistance + this.alpha * (parseFloat(message.payloadString) - lastDistance);
 
                 this.tryCalculatePosition();
             }
@@ -129,7 +133,7 @@ var app = new Vue({
 });
 
 },{"./components/Panel.vue":2,"./util/CanvasRenderer.js":3,"./util/PositionCalculator.js":4}],2:[function(require,module,exports){
-var __vueify_style__ = require("vueify-insert-css").insert("\n.panel__header h3 {\n    margin: 0;\n    padding: 0;\n    font-weight: 300;\n    color: #fff;\n}\n\n.panel {\n    background-color: #fff;\n    margin-bottom: 20px;\n}\n\n.panel__header {\n    border-bottom: 1px solid #16a085;\n    padding: 5px;\n    background-color: #1abc9c;\n    cursor: pointer;\n    -webkit-user-select: none;\n       -moz-user-select: none;\n        -ms-user-select: none;\n            user-select: none;\n}\n\n.panel__header-orange {\n    background-color: #f39c12;\n    border-bottom: 1px solid #e67e22;\n}\n\n.panel__header_toggler {\n    float: right;\n    color: #fff;\n}\n\n.panel__content {\n    padding: 10px;\n}\n")
+var __vueify_style__ = require("vueify-insert-css").insert("\n.panel__header h3 {\n    margin: 0;\n    padding: 0;\n    font-weight: 300;\n    color: #fff;\n}\n\n.panel {\n    background-color: #fff;\n    margin-bottom: 20px;\n}\n\n.panel__header {\n    border-bottom: 1px solid #16a085;\n    padding: 5px;\n    background-color: #1abc9c;\n    cursor: pointer;\n    -webkit-user-select: none;\n       -moz-user-select: none;\n        -ms-user-select: none;\n            user-select: none;\n}\n\n.panel__header-orange {\n    background-color: #f39c12;\n    border-bottom: 1px solid #e67e22;\n}\n\n.panel__header-red {\n    background-color: #c0392b;\n    border-bottom: 1px solid #962d22;\n}\n\n.panel__header_toggler {\n    float: right;\n    color: #fff;\n}\n\n.panel__content {\n    padding: 10px;\n}\n")
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -142,14 +146,14 @@ exports.default = {
     }
 };
 if (module.exports.__esModule) module.exports = module.exports.default
-;(typeof module.exports === "function"? module.exports.options: module.exports).template = "\n<div class=\"panel\">\n    <div class=\"panel__header\" v-bind:class=\"{'panel__header-orange': headerColor == 'orange'}\" @click=\"hide=!hide\">\n        <div class=\"panel__header_toggler\" v-show=\"!hide\">▲</div>\n        <div class=\"panel__header_toggler\" v-show=\"hide\">▼</div>\n        <h3>{{ title }}</h3>\n    </div>\n    <div v-show=\"!hide\" class=\"panel__content\">\n        <slot></slot>\n    </div>\n</div>\n"
+;(typeof module.exports === "function"? module.exports.options: module.exports).template = "\n<div class=\"panel\">\n    <div class=\"panel__header\" v-bind:class=\"{'panel__header-orange': headerColor == 'orange', 'panel__header-red': headerColor == 'red'}\" @click=\"hide=!hide\">\n        <div class=\"panel__header_toggler\" v-show=\"!hide\">▲</div>\n        <div class=\"panel__header_toggler\" v-show=\"hide\">▼</div>\n        <h3>{{ title }}</h3>\n    </div>\n    <div v-show=\"!hide\" class=\"panel__content\">\n        <slot></slot>\n    </div>\n</div>\n"
 if (module.hot) {(function () {  module.hot.accept()
   var hotAPI = require("vue-hot-reload-api")
   hotAPI.install(require("vue"), true)
   if (!hotAPI.compatible) return
-  var id = "/Users/friedrich/Sites/mpp-localization-ui/assets/js/components/Panel.vue"
+  var id = "/Users/davidbohn/Development/indoor-location-test/assets/js/components/Panel.vue"
   module.hot.dispose(function () {
-    require("vueify-insert-css").cache["\n.panel__header h3 {\n    margin: 0;\n    padding: 0;\n    font-weight: 300;\n    color: #fff;\n}\n\n.panel {\n    background-color: #fff;\n    margin-bottom: 20px;\n}\n\n.panel__header {\n    border-bottom: 1px solid #16a085;\n    padding: 5px;\n    background-color: #1abc9c;\n    cursor: pointer;\n    -webkit-user-select: none;\n       -moz-user-select: none;\n        -ms-user-select: none;\n            user-select: none;\n}\n\n.panel__header-orange {\n    background-color: #f39c12;\n    border-bottom: 1px solid #e67e22;\n}\n\n.panel__header_toggler {\n    float: right;\n    color: #fff;\n}\n\n.panel__content {\n    padding: 10px;\n}\n"] = false
+    require("vueify-insert-css").cache["\n.panel__header h3 {\n    margin: 0;\n    padding: 0;\n    font-weight: 300;\n    color: #fff;\n}\n\n.panel {\n    background-color: #fff;\n    margin-bottom: 20px;\n}\n\n.panel__header {\n    border-bottom: 1px solid #16a085;\n    padding: 5px;\n    background-color: #1abc9c;\n    cursor: pointer;\n    -webkit-user-select: none;\n       -moz-user-select: none;\n        -ms-user-select: none;\n            user-select: none;\n}\n\n.panel__header-orange {\n    background-color: #f39c12;\n    border-bottom: 1px solid #e67e22;\n}\n\n.panel__header-red {\n    background-color: #c0392b;\n    border-bottom: 1px solid #962d22;\n}\n\n.panel__header_toggler {\n    float: right;\n    color: #fff;\n}\n\n.panel__content {\n    padding: 10px;\n}\n"] = false
     document.head.removeChild(__vueify_style__)
   })
   if (!module.hot.data) {
@@ -282,10 +286,11 @@ var CanvasRenderer = function () {
                 ctx.fillText(node, coords[0] * this.scale - 5, coords[1] * this.scale + 4);
             }
 
-            var maxX = 8;
-            var maxY = 6;
+            var maxX = 12;
+            var maxY = 12;
             var resolution = 0.10;
 
+            ctx.beginPath();
             for (var cX = 0.0; cX < maxX; cX += resolution) {
                 for (var cY = 0.0; cY < maxY; cY += resolution) {
                     if (pcalc.isPossiblePosition(cX, cY, this.distances, this.baseNodes)) {
@@ -341,8 +346,8 @@ var PositionCalculator = function () {
 		key: 'calculatePosition',
 		value: function calculatePosition(distances, baseNodes) {
 
-			var maxX = 8;
-			var maxY = 6;
+			var maxX = 12;
+			var maxY = 12;
 			var resolution = 0.05;
 
 			var x = 0.0;

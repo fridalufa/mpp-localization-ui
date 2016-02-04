@@ -18,11 +18,11 @@ var app = new Vue({
 			d3: 0
 		},
         width: 7.413,
-        height: 6.157,
+        height: 10,
 		baseNodes: {
-			d1: [0.4, 0.4],
-			d2: [7.413 - 0.44, 0.602],
-			d3: [3.7, 6.157]
+			d1: [0.4, 2.4],
+			d2: [7.413 - 0.44, 2.602],
+			d3: [3.7, 8.157]
 		},
         position: {
             x: 0,
@@ -38,12 +38,15 @@ var app = new Vue({
             0.3,
             0.35,
             0.4,
-            0.45
+            0.45,
+            0.5,
+            0.55
         ],
         error: {
             value: 0.3,
             type: "absolute"
         },
+        alpha: 0.6,
         receiveCount: 0
 	},
 
@@ -99,9 +102,13 @@ var app = new Vue({
         onMessageArrived: function(message) {
             var channelName = "pos/";
 
+            this.alpha = parseFloat(this.alpha);
+
             if (message.destinationName.indexOf(channelName) == 0) {
             	var index = message.destinationName.substring(channelName.length);
-            	this.distances[index] = parseFloat(message.payloadString);
+                var lastDistance = this.distances[index];
+            	this.distances[index] = lastDistance + this.alpha * (parseFloat(message.payloadString) - lastDistance);
+
 
                 this.tryCalculatePosition();
             }
